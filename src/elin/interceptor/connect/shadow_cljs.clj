@@ -77,7 +77,8 @@
                     (let [build-id (-> (e.f.evaluate/evaluate-code ctx shadow-cljs-build-ids-code)
                                        (get-in [:response :value])
                                        (edn/read-string)
-                                       (->> (e.f.select/select-from-candidates ctx)))]
+                                       (->> (e.f.select/select-from-candidates ctx))
+                                       keyword)]
                       (->> (str `(do (shadow.cljs.devtools.api/watch ~build-id)
                                      (shadow.cljs.devtools.api/nrepl-select ~build-id)))
                            (e.f.evaluate/evaluate-code ctx))))))
