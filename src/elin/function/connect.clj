@@ -37,7 +37,7 @@
                        (or (not hostname) (not port))
                        (assoc ctx :error (e/fault))
 
-                       (e.p.nrepl/get-client nrepl hostname port)
+                       (some-> (e.p.nrepl/get-client nrepl hostname port) e.p.nrepl/disconnected? not)
                        (assoc ctx :error (e/conflict))
 
                        :else
