@@ -86,6 +86,7 @@
    socket
    read-stream
    write-stream
+   write-lock
    raw-message-channel
    response-manager]
 
@@ -103,8 +104,10 @@
 
   (notify [this msg]
     (when-not (e.p.nrepl/disconnected? this)
-      (->> (update-keys msg (comp str symbol))
-           (b/write-bencode write-stream))))
+      (locking write-lock
+        (->> (update-keys msg (comp str symbol))
+             (b/write-bencode write-stream))
+        (.flush write-stream))))
 
   (request [this msg]
     (if (e.p.nrepl/disconnected? this)
@@ -112,8 +115,10 @@
       (let [id (or (:id msg) (e.u.id/next-id))
             msg (assoc msg :id id)]
         (swap! response-manager register-message msg)
-        (->> (update-keys msg (comp str symbol))
-             (b/write-bencode write-stream))
+        (locking write-lock
+          (->> (update-keys msg (comp str symbol))
+               (b/write-bencode write-stream))
+          (.flush write-stream))
         (get-in @response-manager [id :channel])))))
 
 (m/=> connect [:=> [:cat string? int?] (e.schema/error-or e.s.nrepl/?Connection)])
@@ -124,6 +129,7 @@
           raw-message-channel (async/chan)
           read-stream (PushbackInputStream. (.getInputStream sock))
           write-stream (.getOutputStream sock)
+          write-lock (Object.)
           response-manager (atom {})]
 
       (async/go-loop []
@@ -144,6 +150,7 @@
          :socket sock
          :read-stream read-stream
          :write-stream write-stream
+         :write-lock write-lock
          :raw-message-channel raw-message-channel
          :response-manager response-manager}))
     (catch Exception ex
