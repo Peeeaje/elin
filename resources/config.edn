@@ -94,6 +94,7 @@
                   elin.handler.internal/status {:log {:min-level :error}
                                                 :label {:disconnected ""
                                                         :connected "🍏"}}
+                  elin.handler.internal/nrepl-connected? {}
                   elin.handler.lookup/lookup {:format {:clojure #resource "template/lookup_clojure.mustache"
                                                        :java #resource "template/lookup_java.mustache"}
                                               :replace-string {#re "</?p>\n?" ""

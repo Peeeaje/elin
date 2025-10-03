@@ -126,10 +126,39 @@ command! ElinReferences call elin#notify('elin.handler.navigate/references', [])
 command! ElinLocalReferences call elin#notify('elin.handler.navigate/local-references', [])
 
 " Documentation
-command! ElinLookup call elin#notify('elin.handler.lookup/lookup', [])
+command! ElinLookup call s:lookup()
 command! ElinShowSource call elin#notify('elin.handler.lookup/show-source', [])
 command! ElinShowClojureDocs call elin#notify('elin.handler.lookup/show-clojuredocs', [])
 command! ElinOpenJavadoc call elin#notify('elin.handler.lookup/open-javadoc', [])
+
+function! s:is_nrepl_connected() abort
+  if !elin#server#is_connected()
+    return v:false
+  endif
+
+  try
+    let connected = elin#request('elin.handler.internal/nrepl-connected?', [])
+    return type(connected) == type(v:true) && connected is# v:true
+  catch /.*/
+    return v:false
+  endtry
+endfunction
+
+function! s:lookup() abort
+  if s:is_nrepl_connected()
+    call elin#notify('elin.handler.lookup/lookup', [])
+    return
+  endif
+
+  if has('nvim') && exists('*luaeval')
+    if luaeval("vim.lsp and vim.lsp.buf and type(vim.lsp.buf.hover) == 'function'")
+      silent! lua vim.lsp.buf.hover()
+      return
+    endif
+  endif
+
+  silent! normal! K
+endfunction
 
 " Testing
 command! ElinTestUnderCursor call elin#notify('elin.handler.test/run-test-under-cursor', [])

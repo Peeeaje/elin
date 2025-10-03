@@ -46,3 +46,8 @@
     (if (e.p.nrepl/disconnected? nrepl)
       disconnected
       connected)))
+
+(m/=> nrepl-connected? [:=> [:cat e.s.handler/?Elin] boolean?])
+(defn nrepl-connected?
+  [{:component/keys [nrepl]}]
+  (not (e.p.nrepl/disconnected? nrepl)))
