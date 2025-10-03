@@ -36,8 +36,12 @@
       (and (e/conflict? error)
            hostname
            port)
-      (e.message/warning host (format "Already connected to %s:%s"
-                                      hostname port))
+      (do
+        ;; 既存接続がある場合は、その接続にスイッチする
+        (when-let [client (e.p.nrepl/get-client (:component/nrepl elin) hostname port)]
+          (e.p.nrepl/switch-client! (:component/nrepl elin) client))
+        (e.message/warning host (format "Already connected to %s:%s"
+                                        hostname port)))
 
       (e/error? error)
       (e.message/warning host (ex-message error))
